@@ -1,0 +1,15 @@
+feat: Update Clinics-Flow - Add AI services and documentation
+
+Comprehensive AI services added:
+- Kimi 2.5 (Moonshot AI) - Medical AI with excellent Arabic
+- ElevenLabs TTS - Arabic text-to-speech
+- AI Router for smart model routing
+- Complete documentation in Arabic and English
+
+Services ready:
+- Medical consultations (Q&A with medical knowledge)
+- Arabic voice generation (ElevenLabs)
+- Smart appointment scheduling
+- Patient education content
+
+Ready for WhatsApp integration!

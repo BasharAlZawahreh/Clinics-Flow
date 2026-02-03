@@ -1,0 +1,34 @@
+{
+  "name": "kimi-service",
+  "version": "1.0.0",
+  "description": "Moonshot AI (Kimi 2.5) API Integration - Excellent Arabic Support",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node server.js"
+  },
+  "keywords": [
+    "moonshot",
+    "kimi",
+    "ai",
+    "kimi-2.5",
+    "arabic",
+    "text-to-speech",
+    "chat",
+    "medical"
+    "chinese"
+    "月亮"
+    "月之暗面"
+  ],
+  "author": "Bashar",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

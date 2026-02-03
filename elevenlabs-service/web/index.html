@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محول النص إلى صوت - ElevenLabs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Tajawal', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-900 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">
+                🎤 محول النص إلى صوت
+            </h1>
+            <p class="text-blue-200 text-lg">
+                استخدام ElevenLabs API - دعم كامل للغة العربية
+            </p>
+        </div>
+
+        <!-- Two Column Layout -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <!-- Left: Text Input -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-6">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800">✍️ أدخل النص</h2>
+                
+                <textarea 
+                    id="textInput"
+                    rows="8"
+                    class="w-full p-4 text-2xl text-right text-gray-900 bg-gray-50 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="اكتب النص هنا... بالعربية أو الإنجليزية"
+                    dir="rtl"
+                ></textarea>
+                
+                <!-- Quick Templates (Arabic) -->
+                <div class="mt-4 grid grid-cols-2 gap-2">
+                    <button onclick="setText('مرحباً بك في عيادتنا')" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition">
+                        مرحباً بك في عيادتنا
+                    </button>
+                    <button onclick="setText('أهلاً، كيف يمكنني مساعدتك اليوم؟')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition">
+                        كيف يمكنني مساعدتك اليوم؟
+                    </button>
+                    <button onclick="setText('موعدك في الساعة العاشرة تم التأكيد')" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition">
+                        تأكيد الموعد
+                    </button>
+                    <button onclick="setText('عفواً، العيادة مغلقة حالياً')" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition">
+                        عيادة مغلقة
+                    </button>
+                </div>
+                
+                <button 
+                    onclick="convertToSpeech()"
+                    class="w-full mt-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 to-indigo-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
+                >
+                    🎙️ توليد الصوت
+                </button>
+                
+                <!-- Result -->
+                <div id="result" class="hidden mt-6 p-6 bg-gray-900/50 rounded-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-white">✅ تم التحويل!</h3>
+                        <button onclick="hideResult()" class="text-gray-400 hover:text-white">✕</button>
+                    </div>
+                    
+                    <audio id="audioPlayer" controls class="w-full mb-4"></audio>
+                    
+                    <div class="grid grid-cols-2 gap-4 text-white">
+                        <div>
+                            <p class="text-sm text-gray-400 mb-1">الملف:</p>
+                            <p id="filename" class="text-lg font-mono"></p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-400 mb-1">الحجم:</p>
+                            <p id="filesize" class="text-lg font-mono"></p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-400 mb-1">المدة:</p>
+                            <p id="duration" class="text-lg font-mono"></p>
+                        </div>
+                    </div>
+                    
+                    <button onclick="downloadAudio()" class="w-full mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl transition">
+                        📥 تحميل الصوت
+                    </button>
+                    
+                    <button onclick="copyToClipboard()" class="w-full mt-2 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-xl transition">
+                        📋 نسخ الرابط
+                    </button>
+                </div>
+                
+                <!-- Loading -->
+                <div id="loading" class="hidden mt-6 text-center">
+                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent border-blue-500"></div>
+                    <p class="mt-4 text-white text-xl">جاري توليد الصوت...</p>
+                </div>
+            </div>
+            
+            <!-- Right: Voice Options -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-6">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800">🎭️ إعدادات الصوت</h2>
+                
+                <!-- Voice Model -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">نموذج الصوت</label>
+                    <select id="voiceModel" class="w-full p-3 text-lg bg-gray-50 border-2 border-gray-300 rounded-lg text-right">
+                        <option value="eleven_multilingual_v2">✅ متعدد اللغات V2 (موصى للعربية)</option>
+                        <option value="eleven_turbo_v2">توربو V2 (سريع جدًا)</option>
+                        <option value="eleven_flash_v2">فلاش V2 (سريع)</option>
+                        <option value="eleven_flash_v2_5">فلاش V2.5</option>
+                        <option value="eleven_monolingual_v1">أحادي اللغة V1</option>
+                        <option value="eleven_turbo_v2_5">توربو V2.5</option>
+                    </select>
+                </div>
+                
+                <!-- Stability -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">الاستقرار</label>
+                    <input 
+                        type="range" 
+                        id="stability" 
+                        min="0" 
+                        max="1" 
+                        step="0.1" 
+                        value="0.5"
+                        class="w-full"
+                    >
+                    <div class="flex justify-between text-sm text-gray-500">
+                        <span>غير ثابت</span>
+                        <span>0.5</span>
+                        <span>ثابت</span>
+                    </div>
+                </div>
+                
+                <!-- Similarity -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">التشابه (Similarity Boost)</label>
+                    <input 
+                        type="range" 
+                        id="similarity" 
+                        min="0" 
+                        max="1" 
+                        step="0.25" 
+                        value="0.75"
+                        class="w-full"
+                    >
+                    <div class="flex justify-between text-sm text-gray-500">
+                        <span>عادي</span>
+                        <span>0.75</span>
+                        <span>أعلى</span>
+                    </div>
+                </div>
+                
+                <!-- Style -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">النمط</label>
+                    <select id="style" class="w-full p-3 text-lg bg-gray-50 border-2 border-gray-300 rounded-lg text-right">
+                        <option value="">تلقائي</option>
+                        <option value="enhanced">محسّن (Enhanced)</option>
+                        <option value="gentle">ناعم (Gentle)</option>
+                        <option value="neutral">محايد (Neutral)</option>
+                        <option value="vibrant">حيوي (Vibrant)</option>
+                    </select>
+                </div>
+                
+                <hr class="my-6 border-gray-200">
+                
+                <button 
+                    onclick="testVoice()" 
+                    class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 px-6 rounded-xl transition border-2 border-gray-300"
+                >
+                    🔊 اختبار الصوت
+                    <span class="text-sm font-normal">استخدم "أهلاً، كيف يمكنني مساعدتك اليوم؟"</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let lastResult = null;
+        
+        function setText(text) {
+            document.getElementById('textInput').value = text;
+        }
+        
+        function hideResult() {
+            document.getElementById('result').classList.add('hidden');
+        }
+        
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+        }
+        
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+        }
+        
+        async function convertToSpeech() {
+            const text = document.getElementById('textInput').value.trim();
+            const voiceModel = document.getElementById('voiceModel').value;
+            const stability = parseFloat(document.getElementById('stability').value);
+            const similarity = parseFloat(document.getElementById('similarity').value);
+            const style = document.getElementById('style').value || undefined;
+            
+            if (!text) {
+                alert('الرجاء إدخال نص');
+                return;
+            }
+            
+            showLoading();
+            hideResult();
+            
+            const voiceSettings = {};
+            if (stability !== 0.5) voiceSettings.stability = stability;
+            if (similarity !== 0.75) voiceSettings.similarity_boost = similarity;
+            if (style) voiceSettings.style = style;
+            
+            const payload = {
+                text,
+                voice_id: voiceModel,
+                voice_settings,
+                model_id: 'eleven_multilingual_v2'
+            };
+            
+            try {
+                const response = await fetch('http://localhost:3003/api/text-to-speech', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    lastResult = data.data;
+                    document.getElementById('result').classList.remove('hidden');
+                    document.getElementById('filename').textContent = data.data.filename;
+                    document.getElementById('filesize').textContent = (data.data.size / 1024).toFixed(2) + ' KB';
+                    document.getElementById('duration').textContent = data.data.duration + ' ms';
+                    
+                    // Set audio source
+                    const audioPlayer = document.getElementById('audioPlayer');
+                    audioPlayer.src = `/output/${data.data.filename}`;
+                    
+                    console.log('✅ Converted:', data);
+                } else {
+                    alert('فشل التحويل: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('خطأ: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        async function testVoice() {
+            const text = "أهلاً، كيف يمكنني مساعدتك اليوم؟";
+            document.getElementById('textInput').value = text;
+            await convertToSpeech();
+        }
+        
+        async function downloadAudio() {
+            if (!lastResult) return;
+            
+            const url = `/output/${lastResult.filename}`;
+            
+            // Create download link
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = lastResult.filename;
+            a.click();
+        }
+        
+        function copyToClipboard() {
+            if (!lastResult) return;
+            
+            const url = `${window.location.origin}/output/${lastResult.filename}`;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('✅ تم نسخ الرابط!');
+            }).catch(err => {
+                alert('فشل النسخ: ' + err);
+            });
+        }
+    </script>
+</body>
+</html>

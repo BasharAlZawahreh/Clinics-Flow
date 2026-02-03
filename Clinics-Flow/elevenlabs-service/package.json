@@ -1,0 +1,27 @@
+{
+  "name": "elevenlabs-service",
+  "version": "1.0.0",
+  "description": "Text-to-Speech Service using ElevenLabs API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "elevenlabs",
+    "text-to-speech",
+    "tts",
+    "arabic",
+    "ai-voice"
+  ],
+  "author": "Bashar",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

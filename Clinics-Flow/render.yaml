@@ -1,0 +1,46 @@
+services:
+  # Frontend - Next.js
+  - type: web
+    name: clinics-flow-web
+    env: node
+    runtime: node18
+    plan: free
+    buildCommand: bash build-deploy.sh
+    startCommand: cd apps/web && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: clinics-flow-db
+          property: connectionString
+
+  # Backend - Node.js API
+  - type: web
+    name: clinics-flow-api
+    env: node
+    runtime: node18
+    plan: free
+    buildCommand: cd apps/api && npm install && npm run build
+    startCommand: cd apps/api && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: DATABASE_URL
+        fromDatabase:
+          name: clinics-flow-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
+
+# PostgreSQL Database
+databases:
+  - name: clinics-flow-db
+    databaseName: clinics_flow
+    user: clinics_flow_user

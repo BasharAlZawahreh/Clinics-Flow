@@ -1,0 +1,282 @@
+{
+  "name": "Clinic Appointment Management",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clinic-booking",
+        "responseMode": "responseNode"
+      },
+      "id": "booking-trigger",
+      "name": "Webhook - Booking Received",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "clinic-booking"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": "{{$env.GOOGLE_SHEET_ID}}",
+        "sheetName": "Appointments",
+        "columns": {
+          "columnValues": {
+            "Name": "={{$json.body.name}}",
+            "Phone": "={{$json.body.phone}}",
+            "Service": "={{$json.body.service}}",
+            "AppointmentDate": "={{$json.body.date}}",
+            "AppointmentTime": "={{$json.body.time}}",
+            "Status": "=Appointment Booked",
+            "BookingTime": "={{Date()}}",
+            "RowId": "={{Date.now()}}"
+          }
+        }
+      },
+      "id": "save-to-sheets",
+      "name": "Save to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "phoneNumber": "={{$json.body.phone}}",
+        "text": "=مرحباً {{$json.body.name}} ✨\n\nتم حجز موعدك بنجاح ✅\n\n📅 اليوم: {{$json.body.date}}\n🕐 الساعة: {{$json.body.time}}\n🩺 الخدمة: {{$json.body.service}}\n\nفي انتظارك 🌿\n\nللاستفسار: [رقم العيادة]"
+      },
+      "id": "confirmation-whatsapp",
+      "name": "WhatsApp - Confirmation",
+      "type": "n8n-nodes-base.whatsapp",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "days"
+      },
+      "id": "wait-1-day",
+      "name": "Wait - 1 Day Before",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "={{Date($json.AppointmentDate)}}",
+            "operator": {
+              "type": "dateTime",
+              "operation": "equals"
+            },
+            "rightValue": "={{Date()}}"
+          }
+        }
+      },
+      "id": "check-today",
+      "name": "Is Today?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "phoneNumber": "={{$json.Phone}}",
+        "text": "=تذكير بموعدك اليوم 🔔\n\nمرحباً {{$json.Name}} 👋\n\nموعدك اليوم:\n📅 {{$json.AppointmentDate}}\n🕐 {{$json.AppointmentTime}}\n🩺 {{$json.Service}}\n\nلو حابب تأكيد الحضور رد بـ: ✅\nلو محتاج تأجيل رد بـ: ⏰\n\nفي انتظارك 🌸"
+      },
+      "id": "reminder-whatsapp",
+      "name": "WhatsApp - Reminder",
+      "type": "n8n-nodes-base.whatsapp",
+      "typeVersion": 1,
+      "position": [1250, 200]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clinic-response",
+        "responseMode": "responseNode"
+      },
+      "id": "response-webhook",
+      "name": "Webhook - Patient Response",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 600],
+      "webhookId": "clinic-response"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": "{{$env.GOOGLE_SHEET_ID}}",
+        "sheetName": "Appointments",
+        "columnToMatchOn": "RowId",
+        "valueToMatchOn": "={{$json.body.rowId}}",
+        "columns": {
+          "columnValues": {
+            "Status": "={{$json.body.response}}"
+          }
+        }
+      },
+      "id": "update-status",
+      "name": "Update Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [450, 600]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "={{$json.body.response}}",
+            "operator": {
+              "type": "string",
+              "operation": "equals"
+            },
+            "rightValue": "=✅"
+          }
+        }
+      },
+      "id": "check-confirmed",
+      "name": "Confirmed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [650, 600]
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "days"
+      },
+      "id": "wait-3-days",
+      "name": "Wait - 3 Days After",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [850, 500]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "phoneNumber": "={{$json.Phone}}",
+        "text": "=نتمنى تكون بخير {{$json.Name}} 🌸\n\nكيف كانت تجربتك في الزيارة؟\n\nلو محتاج أي استفسار أو متابعة إحنا معاك 📞\n\nنسأل الله لك الشفاء العاجل 🤲"
+      },
+      "id": "followup-whatsapp",
+      "name": "WhatsApp - Follow-up",
+      "type": "n8n-nodes-base.whatsapp",
+      "typeVersion": 1,
+      "position": [1050, 500]
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "connections": {
+    "Webhook - Booking Received": {
+      "main": [
+        [
+          {
+            "node": "Save to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp - Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp - Confirmation": {
+      "main": [
+        [
+          {
+            "node": "Wait - 1 Day Before",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait - 1 Day Before": {
+      "main": [
+        [
+          {
+            "node": "Is Today?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Today?": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp - Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - Patient Response": {
+      "main": [
+        [
+          {
+            "node": "Update Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Status": {
+      "main": [
+        [
+          {
+            "node": "Confirmed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirmed?": {
+      "main": [
+        [
+          {
+            "node": "Wait - 3 Days After",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait - 3 Days After": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp - Follow-up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
