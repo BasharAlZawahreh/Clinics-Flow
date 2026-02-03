@@ -3,14 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npx next dev",
-    "build": "TURBOPACK=0 npx next build",
-    "start": "npx next start",
-    "lint": "npx eslint"
+    "dev": "next dev",
+    "build": "bash ../scripts/generate-prisma.sh && next build",
+    "start": "next start",
+    "postinstall": "cd ../scripts && bash generate-prisma.sh"
   },
   "dependencies": {
     "next": "16.1.6",
-    "typescript": "^5"
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "@prisma/client": "^5.7.0",
+    "axios": "^1.6.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -20,5 +23,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }
