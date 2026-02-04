@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "cd ../packages/database && npx prisma generate && cd ../apps/web && npx next build",
+    "build": "cd ../scripts && bash fix-prisma-client.sh && npx next build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -14,12 +14,6 @@
     "react-dom": "19.2.3",
     "@prisma/client": "^5.7.0",
     "axios": "^1.6.2",
-    "date-fns": "^3.0.0",
-    "lucide-react": "^0.563.0",
-    "recharts": "^3.7.0",
-    "tailwind-merge": "^3.4.0",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
     "date-fns": "^3.0.0",
     "lucide-react": "^0.563.0",
     "recharts": "^3.7.0",
